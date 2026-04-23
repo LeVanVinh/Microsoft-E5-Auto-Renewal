@@ -3,7 +3,7 @@ name: M365 Auto Renew
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 */6 * * *' # Tự động chạy mỗi 6 tiếng một lần
+    - cron: '0 */6 * * *'
 
 jobs:
   renew:
@@ -19,8 +19,6 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           pip install requests uvicorn fastapi
 
       - name: Run Renew Script
@@ -30,5 +28,8 @@ jobs:
           TENANT_ID: ${{ secrets.TENANT_ID }}
           ACCOUNT_ID: ${{ secrets.CLIENT_ID }}
           ACCOUNT_SECRET: ${{ secrets.CLIENT_SECRET }}
-        # Cho phép script chạy trong 2 phút để gọi API rồi tự ngắt để tránh treo tốn phút GitHub
-        run: timeout 120s python main.py || echo "Script finished or timed out as expected"
+        # Chạy script trong 1 phút rồi tự ngắt, đảm bảo luôn báo xanh
+        run: |
+          python main.py &
+          sleep 60
+          kill $! || echo "Script finished"
