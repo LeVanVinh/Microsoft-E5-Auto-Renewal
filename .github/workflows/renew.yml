@@ -30,4 +30,4 @@ jobs:
           TENANT_ID: ${{ secrets.TENANT_ID }}
           ACCOUNT_ID: ${{ secrets.CLIENT_ID }}
           ACCOUNT_SECRET: ${{ secrets.CLIENT_SECRET }}
-        run: python main.py
+        run: | python main.py &  sleep 30  pkill python
