@@ -21,7 +21,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          pip install requests uvicorn fastapi  # Cài đặt thủ công các thư viện bạn đang  thiếu
+          pip install requests uvicorn fastapi
 
       - name: Run Renew Script
         env:
@@ -30,4 +30,5 @@ jobs:
           TENANT_ID: ${{ secrets.TENANT_ID }}
           ACCOUNT_ID: ${{ secrets.CLIENT_ID }}
           ACCOUNT_SECRET: ${{ secrets.CLIENT_SECRET }}
-        run: | python main.py &  sleep 30  pkill python
+        # Cho phép script chạy trong 2 phút để gọi API rồi tự ngắt để tránh treo tốn phút GitHub
+        run: timeout 120s python main.py || echo "Script finished or timed out as expected"
