@@ -19,7 +19,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install requests uvicorn fastapi
+          python -m pip install --upgrade pip
+          # Cài đặt tất cả các thư viện có thể gây lỗi
+          pip install requests uvicorn fastapi quart flask aiohttp
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Run Renew Script
         env:
@@ -28,7 +31,6 @@ jobs:
           TENANT_ID: ${{ secrets.TENANT_ID }}
           ACCOUNT_ID: ${{ secrets.CLIENT_ID }}
           ACCOUNT_SECRET: ${{ secrets.CLIENT_SECRET }}
-        # Chạy script trong 1 phút rồi tự ngắt, đảm bảo luôn báo xanh
         run: |
           python main.py &
           sleep 60
