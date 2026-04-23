@@ -19,19 +19,27 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          # Cài đặt tất cả các thư viện có thể gây lỗi
-          pip install requests uvicorn fastapi quart flask aiohttp
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install requests uvicorn fastapi quart httpx
 
-      - name: Run Renew Script
+      - name: Run and Activate Script
         env:
           CLIENT_ID: ${{ secrets.CLIENT_ID }}
           CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
-          TENANT_ID: ${{ secrets.TENANT_ID }}
-          ACCOUNT_ID: ${{ secrets.CLIENT_ID }}
-          ACCOUNT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          # Lấy các thông tin mật khẩu và token từ Secret bạn đã cài
+          WEB_PASSWORD: ${{ secrets.WEB_APP_PASSWORD }}
+          MS_REFRESH_TOKEN: ${{ secrets.REFRESH_TOKEN }}
         run: |
-          python main.py &
+          # 1. Bật server chạy ngầm
+          python main.py & 
+          
+          # 2. Đợi 10 giây cho server khởi động
+          sleep 10 
+          
+          # 3. Tự gửi lệnh POST để kích hoạt quá trình gia hạn
+          curl -X POST http://127.0.0.1:8080/call \
+          -H "Content-Type: application/json" \
+          -d "{\"password\": \"$WEB_PASSWORD\", \"refresh_token\": \"$MS_REFRESH_TOKEN\"}"
+          
+          # 4. Đợi 60 giây để script hoàn thành gọi 18 API Microsoft
           sleep 60
-          kill $! || echo "Script finished"
+          kill $! || echo "Gia hạn hoàn tất"
