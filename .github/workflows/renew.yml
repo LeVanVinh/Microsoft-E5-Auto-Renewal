@@ -23,23 +23,24 @@ jobs:
 
       - name: Run and Activate Script
         env:
-          CLIENT_ID: ${{ secrets.CLIENT_ID }}
-          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
-          # Lấy các thông tin mật khẩu và token từ Secret bạn đã cài
-          WEB_PASSWORD: ${{ secrets.WEB_APP_PASSWORD }}
-          MS_REFRESH_TOKEN: ${{ secrets.REFRESH_TOKEN }}
+          # Truyền các Secret vào đúng tên biến môi trường mà config.py yêu cầu
+          E5_CLIENT_ID: ${{ secrets.E5_CLIENT_ID }}
+          E5_CLIENT_SECRET: ${{ secrets.E5_CLIENT_SECRET }}
+          E5_REFRESH_TOKEN: ${{ secrets.E5_REFRESH_TOKEN }}
+          E5_WEB_APP_PASSWORD: ${{ secrets.E5_WEB_APP_PASSWORD }}
+          PORT: 8080
         run: |
-          # 1. Bật server chạy ngầm
+          # 1. Khởi chạy server ngầm
           python main.py & 
           
-          # 2. Đợi 10 giây cho server khởi động
-          sleep 10 
+          # 2. Chờ 15 giây để server khởi động và đọc config
+          sleep 15 
           
-          # 3. Tự gửi lệnh POST để kích hoạt quá trình gia hạn
+          # 3. Gửi lệnh POST kèm mật khẩu để kích hoạt hàm call_endpoints
           curl -X POST http://127.0.0.1:8080/call \
           -H "Content-Type: application/json" \
-          -d "{\"password\": \"$WEB_PASSWORD\", \"refresh_token\": \"$MS_REFRESH_TOKEN\"}"
+          -d "{\"password\": \"${{ secrets.E5_WEB_APP_PASSWORD }}\", \"refresh_token\": \"${{ secrets.E5_REFRESH_TOKEN }}\"}"
           
-          # 4. Đợi 60 giây để script hoàn thành gọi 18 API Microsoft
+          # 4. Để script chạy trong 60 giây rồi đóng
           sleep 60
-          kill $! || echo "Gia hạn hoàn tất"
+          kill $! || echo "Gia hạn thành công"
