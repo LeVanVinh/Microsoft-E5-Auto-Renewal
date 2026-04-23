@@ -3,7 +3,7 @@ name: M365 Auto Renew
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 */6 * * *' # Chạy mỗi 6 tiếng một lần
+    - cron: '0 */6 * * *' # Tự động chạy mỗi 6 tiếng một lần
 
 jobs:
   renew:
@@ -18,11 +18,16 @@ jobs:
           python-version: '3.9'
 
       - name: Install dependencies
-        run: pip install requests
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install requests uvicorn fastapi  # Cài đặt thủ công các thư viện bạn đang thiếu
 
       - name: Run Renew Script
         env:
           CLIENT_ID: ${{ secrets.CLIENT_ID }}
           CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
           TENANT_ID: ${{ secrets.TENANT_ID }}
+          ACCOUNT_ID: ${{ secrets.CLIENT_ID }}
+          ACCOUNT_SECRET: ${{ secrets.CLIENT_SECRET }}
         run: python main.py
