@@ -3,7 +3,7 @@ name: M365 Auto Renew
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 */6 * * *'
+    - cron: '0 */6 * * *' # Chạy tự động mỗi 6 tiếng
 
 jobs:
   renew:
@@ -23,24 +23,27 @@ jobs:
 
       - name: Run and Activate Script
         env:
-          # Truyền các Secret vào đúng tên biến môi trường mà config.py yêu cầu
+          # Truyền các Secret từ GitHub vào biến môi trường mà config.py yêu cầu
           E5_CLIENT_ID: ${{ secrets.E5_CLIENT_ID }}
           E5_CLIENT_SECRET: ${{ secrets.E5_CLIENT_SECRET }}
           E5_REFRESH_TOKEN: ${{ secrets.E5_REFRESH_TOKEN }}
           E5_WEB_APP_PASSWORD: ${{ secrets.E5_WEB_APP_PASSWORD }}
           PORT: 8080
         run: |
-          # 1. Khởi chạy server ngầm
+          # 1. Khởi chạy Web Server chạy ngầm
           python main.py & 
           
-          # 2. Chờ 15 giây để server khởi động và đọc config
+          # 2. Chờ 15 giây để server khởi động hoàn tất
           sleep 15 
           
-          # 3. Gửi lệnh POST kèm mật khẩu để kích hoạt hàm call_endpoints
+          # 3. Gửi lệnh POST kèm mật khẩu để kích hoạt quá trình gọi API Microsoft
+          # Đây là bước quan trọng nhất để chuyển từ "đứng đợi" sang "thực hiện"
           curl -X POST http://127.0.0.1:8080/call \
           -H "Content-Type: application/json" \
-          -d "{\"password\": \"${{ secrets.E5_WEB_APP_PASSWORD }}\", \"refresh_token\": \"${{ secrets.E5_REFRESH_TOKEN }}\"}"
+          -d "{\"password\": \"$E5_WEB_APP_PASSWORD\", \"refresh_token\": \"$E5_REFRESH_TOKEN\"}"
           
-          # 4. Để script chạy trong 60 giây rồi đóng
+          # 4. Giữ server chạy thêm 60 giây để hoàn thành các task gọi API trong background
           sleep 60
-          kill $! || echo "Gia hạn thành công"
+          
+          # 5. Tắt server và kết thúc job
+          kill $! || echo "Tiến trình hoàn tất"
